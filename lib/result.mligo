@@ -22,6 +22,8 @@
 
 (** The core of the test framework. *)
 
+#import "util.mligo" "Util"
+
 (** An alias for returing the gas consumption of a function *)
 type gas = nat
 
@@ -48,10 +50,6 @@ let succeed = succeed_with 0n
 (** Build a [failed] with a given message. *)
 let fail_with (m: string) = Failed ([Message m])
 
-(** [concat a b] concat a and b. *)
-let concat (type a) (left: a list) (right: a list) : a list =
-  List.fold_right (fun (x, xs: a * a list) -> x :: xs) left right
-
 (** [and_then_lazy a f] will collapse a and the [f] performing if [a] is [passed].
     If both are passed, it will returns passed with the sum of the gas consumption,
     if there is a failure, it will returns the first one. *)
@@ -71,7 +69,7 @@ let and_then_lazy (left: result) (right: unit -> result) : result =
 let and_then (left: result) (right: result) =
   match (left, right) with
   | Passed x, Passed y -> Passed (x + y)
-  | Failed x, Failed y -> Failed (concat x y)
+  | Failed x, Failed y -> Failed (Util.concat x y)
   | _, Failed x -> Failed x
   | Failed x, _ -> Failed x
 
@@ -81,3 +79,43 @@ let reduce (list: result list) : result =
     (fun (x, y : result * result) -> and_then x y)
     succeed
     list
+
+
+(* Try to render an execution error as a string. *)
+let pp_test_exec_error (err: test_exec_error) : string =
+  match err with
+  | Other reason -> "Other: `" ^ reason ^ "`"
+  | Rejected (_, _) -> "Rejected michelson program"
+  | Balance_too_low r ->
+    let contract_balance = r.contract_balance in
+    let spend_request = r.spend_request in
+    let balance = Util.tez_to_string contract_balance in
+    let request = Util.tez_to_string spend_request in
+    "Balance_too_low {contract_balance = "
+     ^ balance
+     ^ "; spend_request = "
+     ^ request
+     ^ "; _}"
+
+(** Try to transform a failure reason into a string. *)
+let pp_reason (reason: reason) : string =
+  match reason with
+  | Message msg -> "Message: `" ^ msg ^ "`"
+  | Execution err ->
+    let exec_error = pp_test_exec_error err in
+    "Execution: `" ^ exec_error ^ "`"
+
+(** Convert a Result into a string in order to be printed. *)
+let pp (result: result) : string =
+  match result with
+  | Passed x ->
+    let gas_str = Util.nat_to_string x in
+    "Passed with [" ^ gas_str ^ "] of gas consumption"
+  | Failed reasons ->
+    let list =
+      List.fold_left (fun (acc, err : string * reason) ->
+        let str = pp_reason err in
+        acc ^ " " ^ str ^ ";"
+      ) "" reasons
+    in
+    "Failed with errors [" ^ list ^ "]"
