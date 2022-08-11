@@ -20,17 +20,30 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-(** The entrypoint of the test framework library. *)
-
-(** Re-export the [Logger module]. *)
 #import "logger.mligo" "Logger"
 
-#import "result.mligo" "Result"
+type ('a, 'b) originated = {
+  originated_typed_address : ('a, 'b) typed_address
+; originated_contract : 'a contract
+; originated_address : address
+}
 
-#import "model.mligo" "Model"
-
-#import "assert.mligo" "Assert"
-
-#import "context.mligo" "Context"
-
-#import "contract.mligo" "Contract"
+(** [originate level name f storage quantity] will originate the smart-contract
+    [f] (which is a main entry point) and will provision it using [quantity] and
+    with [storage] as a default storage value. *)
+let originate
+    (type a b)
+    (level: Logger.level)
+    (name: string)
+    (main: (a * b -> (operation list * b)))
+    (storage: b)
+    (quantity: tez) : (a, b) originated =
+  let typed_address, _, _ = Test.originate main storage quantity in
+  let contract = Test.to_contract typed_address in
+  let address = Tezos.address contract in
+  let () =
+    Logger.log level ("originated smart contract", name, address, storage, quantity)
+  in
+  { originated_typed_address = typed_address
+  ; originated_contract = contract
+  ; originated_address = address }
