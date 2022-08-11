@@ -9,7 +9,7 @@ define test_ligo
 endef
 
 test: test-list-ext
-	$(call test_ligo,test/test_result.mligo)
+	$(call test_ligo,test/test.mligo)
 
 test-list-ext:
 	$(call test_ligo,examples/simple/test_list_ext.mligo)

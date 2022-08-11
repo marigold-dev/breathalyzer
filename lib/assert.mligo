@@ -20,13 +20,13 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-(** The entrypoint of the test framework library. *)
-
-(** Re-export the [Logger module]. *)
-#import "logger.mligo" "Logger"
-
 #import "result.mligo" "Result"
 
-#import "model.mligo" "Model"
+(** Some common assertions. *)
 
-#import "assert.mligo" "Assert"
+let is_true (message: string) (value: bool) : Result.result =
+  if value then Result.succeed
+  else Result.fail_with ("Assertion failed: " ^ message)
+
+let is_false (message: string) (value: bool) : Result.result =
+  is_true message (not value)

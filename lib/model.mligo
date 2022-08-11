@@ -20,6 +20,7 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
+#import "util.mligo" "Util"
 #import "logger.mligo" "Logger"
 #import "result.mligo" "Result"
 
@@ -31,6 +32,11 @@ type case = {
 ; case_task : (Logger.level -> Result.result)
 }
 
+type suite = {
+  suite_name : string
+; suite_cases : case list
+}
+
 (** [case name desc test] will produce a test. *)
 let case
   (name: string)
@@ -40,3 +46,72 @@ let case
   ; case_desc = desc
   ; case_task = task
   }
+
+
+(** [suite name cases] will produce a test suite. *)
+let suite (name: string) (cases : case list) : suite = {
+  suite_name = name
+; suite_cases = cases
+}
+
+(** Compute a test case and return the status and the computed message. *)
+let perform_case (log_level: Logger.level) (case : case) : (bool * string) =
+  let result = case.case_task log_level in
+  let is_succeed = Result.is_succeed result in
+  let message = Result.pp result in
+  (is_succeed, message)
+
+(** Pretty print the result of a test. *)
+let pp_case_result (is_succeed : bool) (message : string) (case : case) =
+  let flag = if is_succeed then "[v]" else "[x]" in
+  let full_message =
+    flag ^ " " ^ case.case_name ^ " | " ^ case.case_desc
+    ^ ":\n    " ^ message
+  in
+  Test.println full_message
+
+(** Just perform a test case and returns is succeed status. *)
+let run_case (log_level: Logger.level) (case : case) : bool =
+  let (is_succeed, message) = perform_case log_level case in
+  let () = pp_case_result is_succeed  message case in
+  is_succeed
+
+let line = "-----------------------------------"
+
+(** Run a test suite and pretty print the result. *)
+let run_suite (log_level: Logger.level) (suite: suite) : bool =
+  let () = Test.println line in
+  let () = Test.println ("Running " ^ "<" ^ suite.suite_name ^ ">") in
+  let () = Test.println line in
+  let failed_test =
+    List.fold_left (fun (acc, case : nat * case) ->
+      let is_succeed = run_case log_level case in
+      if is_succeed then acc else acc + 1n
+    ) 0n suite.suite_cases
+ in
+ let () = Test.println line in
+ let is_succeed = failed_test = 0n in
+ let () =
+   if not is_succeed then
+     Test.println
+        ("There is some tests ("
+        ^ Util.nat_to_string_without_suffix failed_test
+        ^ ") that fails")
+ in
+ is_succeed
+
+(** Run a list of test suites. *)
+let run_suites (log_level : Logger.level) (suites: suite list) =
+  let failed_suites =
+    List.fold_left (fun (acc, suite : nat * suite) ->
+      let is_succeed = run_suite log_level suite in
+      if is_succeed then acc else acc + 1n
+    ) 0n suites
+  in
+  let is_succeed = failed_suites = 0n in
+  let () = Test.println ("\n\n" ^ line) in
+  if not is_succeed then
+    Test.failwith
+       ("There is some suites ("
+        ^ Util.nat_to_string_without_suffix failed_suites
+        ^ ") that fails")

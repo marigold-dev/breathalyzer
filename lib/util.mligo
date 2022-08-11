@@ -59,6 +59,9 @@ let int_to_string (x: int) : string =
 let nat_to_string (x: nat) : string =
   int_to_string (int x) ^ "n"
 
+let nat_to_string_without_suffix (x: nat) : string =
+  int_to_string (int x)
+
 (* Convert a tez to a string. *)
 let tez_to_string (x: tez) : string =
   nat_to_string (x / 1tez) ^ "tez"

@@ -41,6 +41,12 @@ type result =
   | Passed of gas
   | Failed of reason list
 
+(** [is_succeed result] return [true] if the result is passed, [false] otherwise. *)
+let is_succeed (result : result) : bool =
+  match result with
+  | Passed _ -> true
+  | Failed _ -> false
+
 (** Build a [passed] result. *)
 let succeed_with (n: gas)  = Passed n
 

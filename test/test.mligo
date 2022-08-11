@@ -20,13 +20,10 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-(** The entrypoint of the test framework library. *)
+#import "../lib/lib.mligo" "Breath"
+#import "test_result.mligo" "Result_suite"
 
-(** Re-export the [Logger module]. *)
-#import "logger.mligo" "Logger"
-
-#import "result.mligo" "Result"
-
-#import "model.mligo" "Model"
-
-#import "assert.mligo" "Assert"
+let () =
+  Breath.Model.run_suites Trace [
+    Result_suite.suite
+  ]
