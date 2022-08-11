@@ -8,7 +8,7 @@ define test_ligo
   $(LIGO_DOCKER) run test $(1) --protocol $(TEZOS_PROTOCOL)
 endef
 
-test: test-list-ext test-ticket-factoryt
+test: test-list-ext test-ticket-factory
 	$(call test_ligo,test/test.mligo)
 
 test-list-ext:
@@ -17,3 +17,5 @@ test-list-ext:
 test-ticket-factoryt:
 	$(call test_ligo,examples/ticket_factory/src/oven_sc.mligo)
 	$(call test_ligo,examples/ticket_factory/src/mint_sc.mligo)
+
+

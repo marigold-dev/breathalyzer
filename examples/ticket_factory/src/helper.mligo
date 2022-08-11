@@ -1,5 +1,4 @@
 (* MIT License
-
    Copyright (c) 2022 Marigold <contact@marigold.dev>
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,29 +19,10 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-(** The entrypoint of the test framework library. *)
+(** Converting a [tez] to a [nat]. *)
+let tez_to_nat (xtz: tez) : nat =
+  xtz / 1mutez
 
-(** Re-export the [Logger module]. *)
-#import "logger.mligo" "Logger"
-
-#import "result.mligo" "Result"
-
-#import "model.mligo" "Model"
-
-#import "assert.mligo" "Assert"
-
-#import "context.mligo" "Context"
-
-#import "contract.mligo" "Contract"
-
-type result = Result.result
-
-let transfer_to_contract
-    (type param)
-    (previous: result)
-    (contract: param contract)
-    (action: param)
-    (fund: tez) : result =
-  let block () = Test.transfer_to_contract contract action fund in
-  let operation () = Result.try_with block in
-  Result.and_then_lazy previous operation
+(** Converting a [nat] to a [tez]. *)
+let nat_to_tez (x: nat) : tez =
+  x * 1mutez
