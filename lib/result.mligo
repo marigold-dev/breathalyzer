@@ -125,3 +125,18 @@ let pp (result: result) : string =
       ) "" reasons
     in
     "Failed with errors [" ^ list ^ "]"
+
+(*Just took the saichu code and use the new combinators*)
+let try_catch 
+  (type a) 
+  (block: unit -> test_exec_result)
+  (capture: nat -> a)
+  (catch: string -> a) : a =
+  let result = block () in
+  match result with
+  | Success gas_value -> capture gas_value
+  | Fail err -> catch (pp_test_exec_error err)
+
+let try_with (block: unit -> test_exec_result) : result =
+  try_catch block succeed_with fail_with
+

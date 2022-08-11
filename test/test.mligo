@@ -22,8 +22,10 @@
 
 #import "../lib/lib.mligo" "Breath"
 #import "test_result.mligo" "Result_suite"
+#import "../examples/ticket_factory/test/test_oven_sc.mligo" "Oven_suite"
 
 let () =
   Breath.Model.run_suites Trace [
-    Result_suite.suite
+    Result_suite.suite;
+    Oven_suite.suite
   ]
