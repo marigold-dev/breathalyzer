@@ -14,6 +14,6 @@ test: test-list-ext test-ticket-factoryt
 test-list-ext:
 	$(call test_ligo,examples/simple/test_list_ext.mligo)
 
-test-ticket-factory:
+test-ticket-factoryt:
 	$(call test_ligo,examples/ticket_factory/src/oven_sc.mligo)
 	$(call test_ligo,examples/ticket_factory/src/mint_sc.mligo)
