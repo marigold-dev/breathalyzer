@@ -17,5 +17,3 @@ test-list-ext:
 test-ticket-factoryt:
 	$(call test_ligo,examples/ticket_factory/src/oven_sc.mligo)
 	$(call test_ligo,examples/ticket_factory/src/mint_sc.mligo)
-
-
