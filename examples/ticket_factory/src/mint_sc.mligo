@@ -1,8 +1,11 @@
 (* MIT License
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 >>>>>>> afe0be3 (add a mint, extend result and contract and bit, and write tests for mint)
+=======
+>>>>>>> afe0be354dfe55b38517d33861daf755eb22bf27
    Copyright (c) 2022 Marigold <contact@marigold.dev>
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
