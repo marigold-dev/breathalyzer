@@ -18,5 +18,4 @@ test-auction:
 	$(call test_ligo,examples/auction/test/test_auction_sc.mligo)
 
 test-ticket-factory:
-	$(call test_ligo,examples/ticket_factory/src/oven_sc.mligo)
-	$(call test_ligo,examples/ticket_factory/src/mint_sc.mligo)
+	$(call test_ligo,examples/ticket_factory/test/test_ticket_factory.mligo)

@@ -22,6 +22,7 @@
 
 type oven_storage = {
   stored_ticket : bytes ticket option
+; qty_ticket : nat
 ; owner_address : address
 ; mint_address : address
 }

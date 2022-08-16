@@ -38,11 +38,16 @@ let request_mint (mint_address: address) (qty: tez) : operation =
     Tezos.transaction (Mint_process_mint callback) qty mint_sc
 
 let retreive_ticket
+    (counter: nat)
     (stored_ticket : bytes ticket option)
-    (minted_ticket: bytes ticket) : bytes ticket option =
+    (minted_ticket: bytes ticket) : bytes ticket option * nat =
   match stored_ticket with
-  | None -> Some minted_ticket
-  | Some ticket -> Tezos.join_tickets (ticket, minted_ticket)
+  | None ->
+     let (_, (_, n)), fresh_ticket = Tezos.read_ticket minted_ticket in
+     (Some fresh_ticket, n)
+  | Some ticket ->
+      let (_, (_, n)), fresh_ticket = Tezos.read_ticket minted_ticket in
+      (Tezos.join_tickets (ticket, fresh_ticket), counter + n)
 
 let request_redeem (mint_address: address) (stored_ticket : bytes ticket option) : operation =
   match stored_ticket with
@@ -66,7 +71,7 @@ let retreive_tez (owner_address : address) (retribution: tez) : operation =
   Tezos.transaction unit retribution beneficiary
 
 
-let main (action, {owner_address; mint_address; stored_ticket}: entrypoint * storage) : applied =
+let main (action, {owner_address; mint_address; stored_ticket; qty_ticket}: entrypoint * storage) : applied =
   if Tezos.get_source () = owner_address then
     let quantity = Tezos.get_amount () in
     match action with
@@ -75,24 +80,28 @@ let main (action, {owner_address; mint_address; stored_ticket}: entrypoint * sto
       ([operation], {
          owner_address = owner_address
        ; mint_address = mint_address
-       ; stored_ticket = stored_ticket } )
+       ; stored_ticket = stored_ticket
+       ; qty_ticket = qty_ticket} )
     | Oven_retreive_ticket minted_ticket ->
-       let new_ticket = retreive_ticket stored_ticket minted_ticket in
+       let (new_ticket, counter) = retreive_ticket qty_ticket stored_ticket minted_ticket in
        ([], {
          owner_address = owner_address
        ; mint_address = mint_address
-       ; stored_ticket = new_ticket } )
+       ; stored_ticket = new_ticket
+       ; qty_ticket = counter} )
     | Oven_request_redeem ->
       let operation = request_redeem mint_address stored_ticket in
       ([operation], {
          owner_address = owner_address
        ; mint_address = mint_address
-       ; stored_ticket = (None : bytes ticket option) } )
+       ; stored_ticket = (None : bytes ticket option)
+       ; qty_ticket = 0n })
     | Oven_retreive_tez ->
       let operation = retreive_tez owner_address quantity in
       ([operation], {
          owner_address = owner_address
        ; mint_address = mint_address
-       ; stored_ticket = stored_ticket } )
+       ; stored_ticket = (None : bytes ticket option)
+       ; qty_ticket = 0n} )
 
   else failwith "oven_sc: not owner"
