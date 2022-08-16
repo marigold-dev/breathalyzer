@@ -21,6 +21,7 @@
    SOFTWARE. *)
 
 #import "logger.mligo" "Logger"
+#import "result.mligo" "Result"
 
 type ('a, 'b) originated = {
   originated_typed_address : ('a, 'b) typed_address
@@ -47,3 +48,29 @@ let originate
   { originated_typed_address = typed_address
   ; originated_contract = contract
   ; originated_address = address }
+
+
+(** [transfert_to contract entrypoint amount] will transfert amount to an originated SC. *)
+let transfert_to
+    (type a b)
+    (originated: (a, b) originated)
+    (entrypoint: a)
+    (fund: tez) : Result.result =
+  let contract = originated.originated_contract in
+  Result.try_with
+    (fun () -> Test.transfer_to_contract contract entrypoint fund)
+
+
+(** [storage_of originated_contract] will retreive the storage of an originated smart-contract. *)
+let storage_of
+    (type a b)
+    (originated: (a, b) originated) : b =
+  let typed_address = originated.originated_typed_address in
+  Test.get_storage typed_address
+
+(** [get_balance originated_contract] gives the current balance of a smart-contract. *)
+let balance_of
+    (type a b)
+    (originated: (a, b) originated) : tez =
+  let addr = originated.originated_address in
+  Test.get_balance addr

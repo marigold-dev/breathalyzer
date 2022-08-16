@@ -86,12 +86,30 @@ let reduce (list: result list) : result =
     succeed
     list
 
+(** [try_catch f s e] perform [f ()] and if the execution is succeed, it perform
+    [s gas] and if it fails it perform [e error]. *)
+let try_catch
+    (type a)
+    (callback: unit -> test_exec_result)
+    (succeed_callback: nat -> a)
+    (failed_callback: test_exec_error -> a) : a =
+  match callback () with
+  | Success gas_value -> succeed_callback gas_value
+  | Fail err -> failed_callback err
+
+
+(** [try_with f] will perform [f] and wrap it into our test result. *)
+let try_with (callback: unit -> test_exec_result) : result =
+  let execution_failure (err: test_exec_error) =
+    Failed [Execution err]
+  in
+  try_catch callback succeed_with execution_failure
 
 (* Try to render an execution error as a string. *)
 let pp_test_exec_error (err: test_exec_error) : string =
   match err with
   | Other reason -> "Other: `" ^ reason ^ "`"
-  | Rejected (_, _) -> "Rejected michelson program"
+  | Rejected reason -> Test.to_string reason
   | Balance_too_low r ->
     let contract_balance = r.contract_balance in
     let spend_request = r.spend_request in

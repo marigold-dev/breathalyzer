@@ -20,19 +20,33 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-(** The entrypoint of the test framework library. *)
 
-(** Re-export the [Logger module]. *)
-#import "logger.mligo" "Logger"
+#import "../src/auction_sc.mligo" "Auction"
+#import "../../../lib/lib.mligo" "Breath"
 
-#import "result.mligo" "Result"
+type originated = Breath.Contract.originated
 
-#import "model.mligo" "Model"
+let originate (level: Breath.Logger.level) =
+  Breath.Contract.originate
+    level
+    "auction_sc"
+    Auction.main
+    (None: Auction.storage)
+    (0tez)
 
-#import "assert.mligo" "Assert"
+let bid (contract : (Auction.entrypoint, Auction.storage) originated) (qty: tez) () =
+  Breath.Contract.transfert_to contract Bid qty
 
-#import "expect.mligo" "Expect"
-
-#import "context.mligo" "Context"
-
-#import "contract.mligo" "Contract"
+let expect_storage
+    (storage : Auction.storage)
+    (actor: Breath.Context.actor)
+    (expected_amount: tez) : Breath.Result.result =
+  Breath.Assert.is_some_and
+    "The storage should be filled"
+    (fun ({ current_leader_address; current_leader_amount} : Auction.current_leader) ->
+        let expected_leader =
+           Breath.Assert.is_equal "leader" current_leader_address actor.address in
+        let expected_amount =
+           Breath.Assert.is_equal "amount" current_leader_amount expected_amount in
+        Breath.Result.and_then expected_leader expected_amount)
+    storage

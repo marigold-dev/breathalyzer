@@ -20,19 +20,19 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-(** The entrypoint of the test framework library. *)
-
-(** Re-export the [Logger module]. *)
-#import "logger.mligo" "Logger"
-
 #import "result.mligo" "Result"
 
-#import "model.mligo" "Model"
-
-#import "assert.mligo" "Assert"
-
-#import "expect.mligo" "Expect"
-
-#import "context.mligo" "Context"
-
-#import "contract.mligo" "Contract"
+let fail_with_message (message: string) (result: Result.result) : Result.result =
+  match result with
+  | Failed [Execution (Rejected (mp, _))] ->
+    let message_mp = Test.compile_value message in
+    if Test.michelson_equal mp message_mp then Result.succeed
+    else
+      let full_message =
+        "Expected failure: `"
+        ^ message ^ "` but: `"
+        ^ (Test.to_string mp)
+        ^ "` given"
+      in
+      Result.fail_with full_message
+  | _ -> Result.fail_with ("Expected failure: `" ^ message ^ "`")

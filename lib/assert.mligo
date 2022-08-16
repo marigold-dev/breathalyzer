@@ -22,11 +22,44 @@
 
 #import "result.mligo" "Result"
 
+let fail_with (message : string) =
+  Result.fail_with ("Assertion failed: " ^ message)
+
 (** Some common assertions. *)
 
 let is_true (message: string) (value: bool) : Result.result =
   if value then Result.succeed
-  else Result.fail_with ("Assertion failed: " ^ message)
+  else fail_with message
 
 let is_false (message: string) (value: bool) : Result.result =
   is_true message (not value)
+
+let is_equal (type a) (message: string) (left: a) (right: a) =
+  let michelson_left = Test.compile_value left in
+  let michelson_right = Test.compile_value right in
+  if Test.michelson_equal michelson_left michelson_right then Result.succeed
+  else
+    let full_message =
+      message
+      ^ ", "
+      ^ Test.to_string left
+      ^ " is not equal to "
+      ^ Test.to_string right
+    in
+    fail_with full_message
+
+let is_none (type a) (message: string) (value: a option) : Result.result =
+  match value with
+  | None -> Result.succeed
+  | Some _ -> fail_with ("is not [None], " ^ message)
+
+let is_some_and
+    (type a)
+    (message: string)
+    (predicate : a -> Result.result)
+    (value: a option) : Result.result =
+  match value with
+  | None -> fail_with ("is not [Some], " ^ message)
+  | Some x -> predicate x
+
+let is_some (type a) (message: string) = is_some_and message (fun (_: a) -> Result.succeed)
