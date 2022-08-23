@@ -28,6 +28,16 @@ type actor = {
 ; address: address
 }
 
+let default_actors = [
+    ("Baker", 10000000000tez)
+  ; ("Alice", 4000000tez)
+  ; ("Bob", 2000000tez)
+  ; ("Carol", 8000000tez)
+  ; ("David", 8000000tez)
+  ; ("Eve", 8000000tez)
+  ; ("Frank", 8000000tez)
+]
+
 (** [init actors] initialize bootstrap accounts. *)
 let init_with (actors: (string * tez) list) : actor list =
   let number_of_accounts = List.size actors in
@@ -49,20 +59,83 @@ let init_with (actors: (string * tez) list) : actor list =
    in
    Util.rev actors
 
-(** [init_default ()] will initialize a context with four participant,
+(** [init_with_default n] initializes a context with [n] participants,
+    the first one is the baker and the other are regular participants. *)
+let init_with_default (n : int) : actor list =
+  let actors = Util.take n default_actors in
+  init_with actors
+
+(** [init_default ()] will initialize a context with four participants,
     the first one is the baker and the other are regular participants. *)
 let init_default () : actor * (actor * actor * actor) =
-  let actors = init_with [
-    ("Baker", 10000000000tez)
-  ; ("Alice", 4000000tez)
-  ; ("Bob", 2000000tez)
-  ; ("Carol", 8000000tez)
-  ]
-  in
+  let actors = init_with_default 4 in
   match actors with
   | [baker; alice; bob; carol] ->
     let () = Test.set_baker baker.address in
     baker, (alice, bob, carol)
+  | _ -> Test.failwith "unreachable case"
+
+(** [init_with_baker ()] initializes a context with one baker and returns
+    it. *)
+let init_with_baker () : actor =
+  match init_with_default 1 with
+  | [baker] ->
+    let () = Test.set_baker baker.address in
+    baker
+  | _ -> Test.failwith "unreachable case"
+
+(** [init_1_actor ()] initializes a context with one baker and one participant,
+    and returns this participant. *)
+let init_1_actor () : actor =
+  match init_with_default 2 with
+  | [baker; alice] ->
+    let () = Test.set_baker baker.address in
+    alice
+  | _ -> Test.failwith "unreachable case"
+
+(** [init_2_actors ()] initializes a context with one baker and two
+    participants, and returns these participants. *)
+let init_2_actors () : (actor * actor) =
+  match init_with_default 3 with
+  | [baker; alice; bob] ->
+    let () = Test.set_baker baker.address in
+    (alice, bob)
+  | _ -> Test.failwith "unreachable case"
+
+(** [init_3_actors ()] initializes a context with one baker and three
+    participants, and returns these participants. *)
+let init_3_actors () : (actor * actor * actor) =
+  match init_with_default 4 with
+  | [baker; alice; bob; carol] ->
+    let () = Test.set_baker baker.address in
+    (alice, bob, carol)
+  | _ -> Test.failwith "unreachable case"
+
+(** [init_4_actors ()] initializes a context with one baker and four
+    participants, and returns these participants. *)
+let init_4_actors () : (actor * actor * actor * actor) =
+  match init_with_default 5 with
+  | [baker; alice; bob; carol; dave] ->
+    let () = Test.set_baker baker.address in
+    (alice, bob, carol, dave)
+  | _ -> Test.failwith "unreachable case"
+
+(** [init_5_actors ()] initializes a context with one baker and four
+    participants, and returns these participants. *)
+let init_5_actors () : (actor * actor * actor * actor * actor) =
+  match init_with_default 6 with
+  | [baker; alice; bob; carol; dave; eve] ->
+    let () = Test.set_baker baker.address in
+    (alice, bob, carol, dave, eve)
+  | _ -> Test.failwith "unreachable case"
+
+(** [init_6_actors ()] initializes a context with one baker and six
+    participants, and returns these participants. *)
+let init_6_actors () : (actor * actor * actor * actor * actor * actor) =
+  match init_with_default 7 with
+  | [baker; alice; bob; carol; dave; eve; frank] ->
+    let () = Test.set_baker baker.address in
+    (alice, bob, carol, dave, eve, frank)
   | _ -> Test.failwith "unreachable case"
 
 (** [act_as actor f] will perform the operation [f] in the POV of the given [actor]. *)

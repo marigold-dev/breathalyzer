@@ -73,3 +73,16 @@ let concat (type a) (left: a list) (right: a list) : a list =
 (** [rev list] should return the same list reversed. *)
 let rev (type a) (list: a list) : a list =
   List.fold_left (fun (xs, x : a list * a) -> x :: xs) ([] : a list) list
+
+(** [take k list] returns the list of the k first elements of [list] and fails
+    if k is negative or if the list is too short *)
+let take (type a) (k : int) (xs : a list) : (a list) =
+  let rec aux (type a) (i : int) (xs : a list) (acc : a list) : a list =
+    if i < 0 then failwith "Invalid argument"
+    else if i = 0 then acc
+    else match xs with
+      | [] -> failwith "Invalid argument: list is too short"
+      | y::ys -> aux (i-1) ys (y :: acc)
+  in
+  rev (aux k xs ([] : a list))
+

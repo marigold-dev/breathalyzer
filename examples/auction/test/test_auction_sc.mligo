@@ -30,7 +30,7 @@ let case_happy_path =
     "bid"
     "when everything is ok, it should upgrade the leader"
     (fun (level: Breath.Logger.level) ->
-      let (_, (alice, bob, carol)) = Breath.Context.init_default () in
+      let alice, bob, carol = Breath.Context.init_3_actors () in
       let contract = Util.originate level in
 
       let alice_action = Breath.Context.act_as alice (Util.bid contract 1tez) in
@@ -53,7 +53,7 @@ let case_leader_try_to_be_upgraded_twice =
     "bid"
     "when the leader try to reupgrade the storage it should raise an error"
     (fun (level: Breath.Logger.level) ->
-      let (_, (alice, _, _)) = Breath.Context.init_default () in
+      let alice = Breath.Context.init_1_actor () in
       let contract = Util.originate level in
 
       let alice_fst_action = Breath.Context.act_as alice (Util.bid contract 1tez) in
@@ -74,7 +74,7 @@ let case_try_to_upgrade_with_a_lower_amount =
     "bid"
     "when a challenger try to upgrade the storage with a lower amount it should raise an error"
     (fun (level: Breath.Logger.level) ->
-      let (_, (alice, bob, _)) = Breath.Context.init_default () in
+      let (alice, bob) = Breath.Context.init_2_actors () in
       let contract = Util.originate level in
 
       let alice_action = Breath.Context.act_as alice (Util.bid contract 2tez) in
@@ -95,7 +95,7 @@ let case_try_to_upgrade_with_a_null_amount =
     "bid"
     "when a challenger try to upgrade the storage without tez, it should raise an error"
     (fun (level: Breath.Logger.level) ->
-      let (_, (alice, _, _)) = Breath.Context.init_default () in
+      let alice = Breath.Context.init_1_actor () in
       let contract = Util.originate level in
 
       let alice_action = Breath.Context.act_as alice (Util.bid contract 0tez) in
