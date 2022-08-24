@@ -1,6 +1,6 @@
 .PHONY: test test-list-ext
 
-LIGO_COMPILER_VERSION:=0.48.0
+LIGO_COMPILER_VERSION:=0.49.0
 TEZOS_PROTOCOL:=jakarta
 LIGO_DOCKER := docker run --rm  -v $(PWD):$(PWD) -w $(PWD) ligolang/ligo:$(LIGO_COMPILER_VERSION)
 
