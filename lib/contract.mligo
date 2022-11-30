@@ -51,16 +51,26 @@ let originate
   ; originated_address = address }
 
 
-(** [transfert_to contract entrypoint amount] will transfert amount to an originated SC. *)
+(** [transfert_to contract parameter amount] will transfert amount to an originated SC. *)
 let transfert_to
     (type a b)
     (originated: (a, b) originated)
-    (entrypoint: a)
+    (parameter: a)
     (fund: tez) : Result.result =
   let contract = originated.originated_contract in
   Result.try_with
-    (fun () -> Test.transfer_to_contract contract entrypoint fund)
+    (fun () -> Test.transfer_to_contract contract parameter fund)
 
+(** [transfert_with_entrypoint_to contract entrypoint parameter amount] will transfert amount to an originated SC. *)
+let transfert_with_entrypoint_to
+    (type a b c)
+    (originated: (a, b) originated)
+    (entrypoint: string)
+    (parameter: c)
+    (fund: tez) : Result.result =
+  let contract = Test.to_entrypoint entrypoint originated.originated_typed_address in
+  Result.try_with
+    (fun () -> Test.transfer_to_contract contract parameter fund)
 
 (** [storage_of originated_contract] will retreive the storage of an originated smart-contract. *)
 let storage_of
