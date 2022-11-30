@@ -29,7 +29,7 @@ type applied = operation list * storage
 let tez_to_nat (xtz: tez) : nat = xtz / 1mutez
 let nat_to_tez (x: nat) : tez = x * 1mutez
 
-let create_new_ticket (storage: storage) (qty: tez) : bytes ticket =
+let create_new_ticket (storage: storage) (qty: tez) : bytes ticket option =
   if qty < storage.minimal_amount then failwith "mint_sc: amount too low"
   else
     let qty_nat = tez_to_nat qty in
@@ -40,8 +40,9 @@ let process_mint
     (storage: storage)
     (callback: bytes ticket contract)
     (qty: tez) : operation =
-  let fresh_ticket = create_new_ticket storage qty in
-  Tezos.transaction fresh_ticket 0tez callback
+  match create_new_ticket storage qty with
+  | Some fresh_ticket -> Tezos.transaction fresh_ticket 0tez callback
+  | None -> failwith "Ticket creation failure"
 
 let process_redeem
     (storage: storage)
