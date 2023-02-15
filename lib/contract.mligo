@@ -51,8 +51,8 @@ let originate
   ; originated_address = address }
 
 
-(** [transfert_to contract parameter amount] will transfert amount to an originated SC. *)
-let transfert_to
+(** [transfer_to contract parameter amount] will transfer amount to an originated SC. *)
+let transfer_to
     (type a b)
     (originated: (a, b) originated)
     (parameter: a)
@@ -61,8 +61,8 @@ let transfert_to
   Result.try_with
     (fun () -> Test.transfer_to_contract contract parameter fund)
 
-(** [transfert_with_entrypoint_to contract entrypoint parameter amount] will transfert amount to an originated SC. *)
-let transfert_with_entrypoint_to
+(** [transfer_with_entrypoint_to contract entrypoint parameter amount] will transfer amount to an originated SC. *)
+let transfer_with_entrypoint_to
     (type a b c)
     (originated: (a, b) originated)
     (entrypoint: string)
