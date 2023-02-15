@@ -1,10 +1,9 @@
 .PHONY: test test-list-ext
 
-LIGO_COMPILER_VERSION:=0.55.0
-LIGO_DOCKER := docker run --rm  -v $(PWD):$(PWD) -w $(PWD) ligolang/ligo:$(LIGO_COMPILER_VERSION)
+LIGO_CC := ligo
 
 define test_ligo
-  $(LIGO_DOCKER) run test $(1)
+  $(LIGO_CC) run test $(1)
 endef
 
 test: test-list-ext test-auction test-ticket-factory
