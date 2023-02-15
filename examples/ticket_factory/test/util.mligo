@@ -72,10 +72,10 @@ let originate_oven
   originate_oven_with level (None: bytes ticket option) actor mint ()
 
 let request_mint (contract: (Oven.entrypoint, Oven.storage) originated) (qty: tez) () =
-  Breath.Contract.transfert_to contract Oven_request_mint qty
+  Breath.Contract.transfer_to contract Oven_request_mint qty
 
 let request_redeem (contract: (Oven.entrypoint, Oven.storage) originated) () =
-  Breath.Contract.transfert_to contract Oven_request_redeem 0tez
+  Breath.Contract.transfer_to contract Oven_request_redeem 0tez
 
 let expected_mint_state
     (contract: (Mint.entrypoint, Mint.storage) originated)

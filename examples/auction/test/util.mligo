@@ -35,7 +35,7 @@ let originate (level: Breath.Logger.level) =
     (0tez)
 
 let bid (contract : (Auction.entrypoint, Auction.storage) originated) (qty: tez) () =
-  Breath.Contract.transfert_to contract Bid qty
+  Breath.Contract.transfer_to contract Bid qty
 
 let expect_storage
     (storage : Auction.storage)
