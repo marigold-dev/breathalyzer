@@ -36,7 +36,7 @@ let digit_to_str (x: int) : string =
   else if x = 8 then "8"
   else if x = 9 then "0"
   else
-    (* Should never happen ! *)
+    (* Should never happen! *)
     failwith "digit_to_str, unknown digit"
 
 (** Convert an int to a string. *)
