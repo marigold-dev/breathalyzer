@@ -23,6 +23,7 @@
 #import "util.mligo" "Util"
 #import "logger.mligo" "Logger"
 #import "result.mligo" "Result"
+#import "ansi.mligo" "Ansi"
 
 (** Describes the model of the test engine. *)
 
@@ -63,10 +64,12 @@ let perform_case (log_level: Logger.level) (case : case) : (bool * string) =
 
 (** Pretty print the result of a test. *)
 let pp_case_result (is_succeed : bool) (message : string) (case : case) =
-  let flag = if is_succeed then "[v]" else "[x]" in
+  let flag, color = if is_succeed then "v", Ansi.green else "x", Ansi.red in
   let full_message =
-    flag ^ " " ^ case.case_name ^ " | " ^ case.case_desc
-    ^ ":\n    " ^ message
+    "[" ^ (color flag) ^ "]" 
+    ^ case.case_name ^ " | " 
+    ^ case.case_desc ^ ":\n    " 
+    ^ color message
   in
   Test.println full_message
 
@@ -93,10 +96,12 @@ let run_suite (log_level: Logger.level) (suite: suite) : bool =
  let is_succeed = failed_test = 0n in
  let () =
    if not is_succeed then
-     Test.println
-        ("There is some tests ("
+     let message = 
+        "There is some tests ("
         ^ Util.nat_to_string_without_suffix failed_test
-        ^ ") that fails")
+        ^ ") that fails"
+     in Test.println (Ansi.red message)
+        
  in
  is_succeed
 
