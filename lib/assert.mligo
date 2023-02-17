@@ -63,3 +63,6 @@ let is_some_and
   | Some x -> predicate x
 
 let is_some (type a) (message: string) = is_some_and message (fun (_: a) -> Result.succeed)
+
+let succeeds : Result.result =
+  Result.succeed
