@@ -55,7 +55,7 @@ let case_result_and_then_3 =
 let case_result_and_then_4 =
   B.Model.case
     "and_then"
-    "when there is two failures, it should merge them"
+    "when there are two failures, it should merge them"
     (fun (_: B.Logger.level) ->
       let expected = Failed [Message "1"; Message "2"] in
       let computed = B.Result.and_then (B.Result.fail_with "1") (B.Result.fail_with "2") in
@@ -78,7 +78,7 @@ let case_result_and_then_lazy_1 =
 let case_result_and_then_lazy_2 =
   B.Model.case
     "and_then_lazy"
-    "when there is two failures, it should compute the second one and merge them"
+    "when there are two failures, it should compute the second one and merge them"
     (fun (_: B.Logger.level) ->
        let expected = Failed [Message "1"] in
        let computed = B.Result.and_then_lazy
@@ -100,7 +100,7 @@ let case_result_reduce_1 =
 let case_result_reduce_2 =
   B.Model.case
     "reduce"
-    "reducing a list with only succeed values should produce a succeed with the sum of gas consumption"
+    "reducing a list with only succeed values should produce a succeed with the sum of gas consumptions"
     (fun (_: B.Logger.level) ->
       let expected = B.Result.succeed_with 10n in
       let computed =
@@ -114,7 +114,7 @@ let case_result_reduce_2 =
 let case_result_reduce_2 =
   B.Model.case
     "reduce"
-    "when there is some errors it should merge them"
+    "when there are some errors it should merge them"
     (fun (_: B.Logger.level) ->
       let expected = Failed [Message "kabooum"; Message "aha"] in
       let computed =

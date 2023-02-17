@@ -66,9 +66,9 @@ let perform_case (log_level: Logger.level) (case : case) : (bool * string) =
 let pp_case_result (is_succeed : bool) (message : string) (case : case) =
   let flag, color = if is_succeed then "v", Ansi.green else "x", Ansi.red in
   let full_message =
-    "[" ^ (color flag) ^ "]" 
-    ^ case.case_name ^ " | " 
-    ^ case.case_desc ^ ":\n    " 
+    "[" ^ (color flag) ^ "]"
+    ^ case.case_name ^ " | "
+    ^ case.case_desc ^ ":\n    "
     ^ color message
   in
   Test.println full_message
@@ -96,12 +96,12 @@ let run_suite (log_level: Logger.level) (suite: suite) : bool =
  let is_succeed = failed_test = 0n in
  let () =
    if not is_succeed then
-     let message = 
-        "There is some tests ("
+     let message =
+        "There are some tests ("
         ^ Util.nat_to_string_without_suffix failed_test
-        ^ ") that fails"
+        ^ ") that fail"
      in Test.println (Ansi.red message)
-        
+
  in
  is_succeed
 
@@ -117,6 +117,6 @@ let run_suites (log_level : Logger.level) (suites: suite list) =
   let () = Test.println ("\n\n" ^ line) in
   if not is_succeed then
     Test.failwith
-       ("There is some suites ("
+       ("There are some suites ("
         ^ Util.nat_to_string_without_suffix failed_suites
-        ^ ") that fails")
+        ^ ") that fail")
