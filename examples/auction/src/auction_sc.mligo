@@ -41,7 +41,7 @@ let bid (storage: storage) (quantity: tez) (user_address: address) : storage =
     let () = if current_leader_amount >= quantity then failwith "Amount should be greater" in
     Some { current_leader_address = user_address; current_leader_amount = quantity }
 
-let main (action, storage: entrypoint * storage) : applied =
+let main (action: entrypoint) (storage: storage) : applied =
   match action with
   | Bid ->
     let quantity = Tezos.get_amount () in

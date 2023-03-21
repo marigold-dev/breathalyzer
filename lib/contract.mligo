@@ -36,12 +36,33 @@ let originate
     (type a b)
     (level: Logger.level)
     (name: string)
+    (main: (a -> b -> (operation list * b)))
+    (storage: b)
+    (quantity: tez) : (a, b) originated =
+  let typed_address, _, _ = Test.originate main storage quantity in
+  let contract = Test.to_contract typed_address in
+  let address = Tezos.address contract in
+
+  let () =
+    Logger.log level ("originated smart contract", name, address, storage, quantity)
+  in
+  { originated_typed_address = typed_address
+  ; originated_contract = contract
+  ; originated_address = address }
+
+(** [originate_uncurried level name f storage quantity] will originate the smart-contract
+    [f] (which is a main entry point) and will provision it using [quantity] and
+    with [storage] as a default storage value. *)
+let originate_uncurried
+    (type a b)
+    (level: Logger.level)
+    (name: string)
     (main: (a * b -> (operation list * b)))
     (storage: b)
     (quantity: tez) : (a, b) originated =
-  let address = Test.originate_contract (Test.compile_contract main) (Test.eval storage) quantity in
-  let typed_address = Test.cast_address address in
+  let typed_address, _, _ = Test.originate_uncurried main storage quantity in
   let contract = Test.to_contract typed_address in
+  let address = Tezos.address contract in
 
   let () =
     Logger.log level ("originated smart contract", name, address, storage, quantity)
