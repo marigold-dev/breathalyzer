@@ -27,7 +27,7 @@
 type originated = Breath.Contract.originated
 
 let originate_mint (level: Breath.Logger.level) (pl: bytes) (min_amount: tez) () =
-  Breath.Contract.originate
+  Breath.Contract.originate_uncurried
     level
     "mint_sc"
     Mint.main
@@ -46,7 +46,7 @@ let originate_oven_with
       let (_, (_, qty)), fresh = Tezos.read_ticket t in
       (Some fresh, qty)
   in
-  Breath.Contract.originate
+  Breath.Contract.originate_uncurried
     level
     ("oven_sc_" ^ actor.name)
     Oven.main
