@@ -36,3 +36,18 @@ let fail_with_message (message: string) (result: Result.result) : Result.result 
       in
       Result.fail_with full_message
   | _ -> Result.fail_with ("Expected failure: `" ^ message ^ "`")
+
+let fail_with_value (type a) (value: a) (result: Result.result) : Result.result =
+  match result with
+  | Failed [Execution (Rejected (mp, _))] ->
+    let value_mp = Test.compile_value value in
+    if Test.michelson_equal mp value_mp then Result.succeed
+    else
+      let full_value =
+        "Expected failure: `"
+        ^ (Test.to_string value) ^ "` but: `"
+        ^ (Test.to_string mp)
+        ^ "` given"
+      in
+      Result.fail_with full_value
+  | _ -> Result.fail_with ("Expected failure: `" ^ (Test.to_string value) ^ "`")
