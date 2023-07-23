@@ -30,7 +30,7 @@ type actor = {
 ; address: address
 }
 
-(** [init actors] initialize bootstrap accounts. *)
+(** [init actors] initializes bootstrap accounts. *)
 let init_with (actors: (string * tez) list) : actor list =
   let number_of_accounts = List.size actors in
   let default_amounts =
@@ -51,8 +51,8 @@ let init_with (actors: (string * tez) list) : actor list =
    in
    Util.rev actors
 
-(** [init_default ()] will initialize a context with four participant,
-    the first one is the baker and the other are regular participants. *)
+(** [init_default ()] initializes a context with four participant, the first one
+    being the baker and the others regular accounts. *)
 let init_default () : actor * (actor * actor * actor) =
   let actors = init_with [
     ("Baker", 10000000000tez)
@@ -67,7 +67,7 @@ let init_default () : actor * (actor * actor * actor) =
     baker, (alice, bob, carol)
   | _ -> Test.failwith "unreachable case"
 
-(** [act_as actor f] will perform the operation [f] in the POV of the given [actor]. *)
+(** [act_as actor f] performs the operation [f] as [actor]. *)
 let act_as (type a) (actor: actor) (handler : unit -> a) : a =
   let old_source = Tezos.get_source () in
   let address = actor.address in
@@ -76,6 +76,8 @@ let act_as (type a) (actor: actor) (handler : unit -> a) : a =
   let () = Test.set_source old_source in
   result
 
+(** [call_as actor contract parameter] performs the [contract] call [f] as
+    [actor]. *)
 let call_as
   (type a b)
   (actor: actor)
