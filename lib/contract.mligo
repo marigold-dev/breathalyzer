@@ -29,9 +29,9 @@ type ('a, 'b) originated = {
 ; originated_address : address
 }
 
-(** [originate level name f storage quantity] will originate the smart-contract
-    [f] (which is a main entry point) and will provision it using [quantity] and
-    with [storage] as a default storage value. *)
+(** [originate level name f storage quantity] originates the smart-contract [f]
+    (which is a main entry point) and provisions it using [quantity] and with
+    [storage] as a default storage value. *)
 let originate
     (type a b)
     (level: Logger.level)
@@ -50,9 +50,9 @@ let originate
   ; originated_contract = contract
   ; originated_address = address }
 
-(** [originate_uncurried level name f storage quantity] will originate the smart-contract
-    [f] (which is a main entry point) and will provision it using [quantity] and
-    with [storage] as a default storage value. *)
+(** [originate_uncurried level name f storage quantity] originates the
+    smart-contract [f] (which is a main entry point) and provisions it using
+    [quantity] and with [storage] as a default storage value. *)
 let originate_uncurried
     (type a b)
     (level: Logger.level)
@@ -71,11 +71,11 @@ let originate_uncurried
   ; originated_contract = contract
   ; originated_address = address }
 
-(** [originate_module level name module storage quantity] will originate the
-    smart-contract from the module [module] and will provision it using [quantity]
-    and with [storage] as a default storage value. Use the [contract_of] keyword to
-    get a module_contract out of a module. Use this function to originate a contract
-    with views. *)
+(** [originate_module level name module storage quantity] originates the
+    smart-contract from the module [module] and provisions it using [quantity]
+    and with [storage] as a default storage value. Use the [contract_of] keyword
+    to get a module_contract out of a module. Use this function to originate a
+    contract with views. *)
 let originate_module
   (type a b)
   (level: Logger.level)
@@ -94,7 +94,8 @@ let originate_module
   ; originated_contract = contract
   ; originated_address = address }
 
-(** [transfer_to contract parameter amount] will transfer amount to an originated SC. *)
+(** [transfer_to contract parameter amount] transfers amount to an
+    originated SC. *)
 let transfer_to
     (type a b)
     (originated: (a, b) originated)
@@ -104,7 +105,8 @@ let transfer_to
   Result.try_with
     (fun () -> Test.transfer_to_contract contract parameter fund)
 
-(** [transfer_with_entrypoint_to contract entrypoint parameter amount] will transfer amount to an originated SC. *)
+(** [transfer_with_entrypoint_to contract entrypoint parameter amount] transfers
+    [amount] to an originated SC. *)
 let transfer_with_entrypoint_to
     (type a b c)
     (originated: (a, b) originated)
@@ -115,21 +117,24 @@ let transfer_with_entrypoint_to
   Result.try_with
     (fun () -> Test.transfer_to_contract contract parameter fund)
 
-(** TODO *)
+(** [call contract parameter] calls [contract] with [parameter] without
+    transferring any tez. *)
 let call
   (type a b)
   (originated: (a, b) originated)
   (parameter: a) : Result.result =
   transfer_to originated parameter 0tez
 
-(** [storage_of originated_contract] will retreive the storage of an originated smart-contract. *)
+(** [storage_of originated_contract] retreives the storage of an originated
+    smart-contract. *)
 let storage_of
     (type a b)
     (originated: (a, b) originated) : b =
   let typed_address = originated.originated_typed_address in
   Test.get_storage typed_address
 
-(** [get_balance originated_contract] gives the current balance of a smart-contract. *)
+(** [balance_of originated_contract] returns the current balance of a
+    smart-contract. *)
 let balance_of
     (type a b)
     (originated: (a, b) originated) : tez =
