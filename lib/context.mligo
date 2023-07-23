@@ -21,6 +21,8 @@
    SOFTWARE. *)
 
 #import "util.mligo" "Util"
+#import "contract.mligo" "Contract"
+#import "result.mligo" "Result"
 
 type actor = {
   name : string
@@ -73,3 +75,10 @@ let act_as (type a) (actor: actor) (handler : unit -> a) : a =
   let result = handler () in
   let () = Test.set_source old_source in
   result
+
+let call_as
+  (type a b)
+  (actor: actor)
+  (originated: (a, b) Contract.originated)
+  (parameter: a) : Result.result =
+  act_as actor (fun () -> Contract.call originated parameter)

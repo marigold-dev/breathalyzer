@@ -71,6 +71,28 @@ let originate_uncurried
   ; originated_contract = contract
   ; originated_address = address }
 
+(** [originate_module level name module storage quantity] will originate the
+    smart-contract from the module [module] and will provision it using [quantity]
+    and with [storage] as a default storage value. Use the [contract_of] keyword to
+    get a module_contract out of a module. Use this function to originate a contract
+    with views. *)
+let originate_module
+  (type a b)
+  (level: Logger.level)
+  (name: string)
+  (contract: (a, b) module_contract)
+  (storage: b)
+  (quantity: tez) : (a, b) originated =
+  let typed_address, _, _ = Test.originate_module contract storage quantity in
+  let contract = Test.to_contract typed_address in
+  let address = Tezos.address contract in
+
+  let () =
+    Logger.log level ("originated smart contract", name, address, storage, quantity)
+  in
+  { originated_typed_address = typed_address
+  ; originated_contract = contract
+  ; originated_address = address }
 
 (** [transfer_to contract parameter amount] will transfer amount to an originated SC. *)
 let transfer_to
@@ -92,6 +114,13 @@ let transfer_with_entrypoint_to
   let contract = Test.to_entrypoint entrypoint originated.originated_typed_address in
   Result.try_with
     (fun () -> Test.transfer_to_contract contract parameter fund)
+
+(** TODO *)
+let call
+  (type a b)
+  (originated: (a, b) originated)
+  (parameter: a) : Result.result =
+  transfer_to originated parameter 0tez
 
 (** [storage_of originated_contract] will retreive the storage of an originated smart-contract. *)
 let storage_of
