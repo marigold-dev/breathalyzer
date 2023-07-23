@@ -22,7 +22,7 @@
 
 #import "result.mligo" "Result"
 
-let fail_with (message : string) =
+let fail_with (message: string) =
   Result.fail_with ("Assertion failed: " ^ message)
 
 (** Some common assertions. *)
