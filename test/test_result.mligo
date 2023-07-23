@@ -111,7 +111,7 @@ let case_result_reduce_2 =
       in
       B.Assert.is_true "should be equal" (expected = computed))
 
-let case_result_reduce_2 =
+let case_result_reduce_3 =
   B.Model.case
     "reduce"
     "when there are some errors it should merge them"
@@ -136,4 +136,4 @@ let suite =
       case_result_and_then_lazy_2 ;
       case_result_reduce_1 ;
       case_result_reduce_2 ;
-      case_result_reduce_2 ]
+      case_result_reduce_3 ]
