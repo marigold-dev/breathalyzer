@@ -1,6 +1,6 @@
 (* MIT License
 
-   Copyright (c) 2022 Marigold <contact@marigold.dev>
+   Copyright (c) 2023 Marigold <contact@marigold.dev>
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to deal in
@@ -20,12 +20,33 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-#import "../lib/lib.mligo" "Breath"
-#import "test_result.mligo" "Result_suite"
-#import "test_tezos.mligo" "Tezos_suite"
+#import "../lib/lib.mligo" "B"
+#import "./simple_contract.jsligo" "Simple"
 
-let () =
-  Breath.Model.run_suites Trace [
-    Result_suite.suite
-  ; Tezos_suite.suite
-  ]
+let (_, (alice, _, _)) = B.Context.init_default ()
+
+let originated level =
+  B.Contract.originate_module level "Simple" (contract_of Simple) 0 0tez
+
+let case_views_1 =
+  B.Model.case
+    "call_view"
+    "succeeds on a contract originated with originate_module"
+    (fun (level: B.Logger.level) ->
+      let contract = originated level in
+      B.Result.reduce [
+        B.Context.call_as alice
+          contract (Decrement 5);
+        B.Context.call_as alice
+          contract (Increment 3);
+        B.Assert.is_equal
+          "should be -2"
+          (Tezos.call_view "get_value" () contract.originated_address)
+          (Some (-2))
+      ])
+
+let suite =
+  B.Model.suite
+    "Test suite for Tezos operations"
+    [ case_views_1
+    ]
