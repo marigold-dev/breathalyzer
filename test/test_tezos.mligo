@@ -23,6 +23,23 @@
 #import "../lib/lib.mligo" "B"
 #import "./simple_contract.jsligo" "Simple"
 
+module Other = struct
+  type storage = {
+    simple: address;
+    x: int
+  }
+
+  [@entry]
+  let default (_, storage: unit * storage): operation list * storage =
+    match (Tezos.call_view "get_value" () storage.simple: int option) with
+      | None -> failwith "Should not happen"
+      | Some x -> [], { storage with x = x }
+
+  [@view]
+  let view (_, storage: unit * storage): int =
+    storage.x
+end
+
 let (_, (alice, _, _)) = B.Context.init_default ()
 
 let originated level =
@@ -45,8 +62,30 @@ let case_views_1 =
           (Some (-2))
       ])
 
+let case_views_2 =
+  B.Model.case
+    "call_view"
+    "succeeds when a contract uses it on another contract, both originated with originate_module"
+    (fun (level: B.Logger.level) ->
+      let contract = originated level in
+      let initial_storage = { simple = contract.originated_address; x = 0 } in
+      let other =
+        B.Contract.originate_module level "Other" (contract_of Other) initial_storage 0tez
+      in
+      B.Result.reduce [
+        B.Context.call_as alice
+          contract (Increment 10);
+        B.Context.call_as alice
+          other (Default ());
+        B.Assert.is_equal
+          "should be 10"
+          (Tezos.call_view "view" () other.originated_address)
+          (Some 10)
+      ])
+
 let suite =
   B.Model.suite
     "Test suite for Tezos operations"
     [ case_views_1
+    ; case_views_2
     ]
