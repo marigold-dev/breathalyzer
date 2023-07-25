@@ -21,24 +21,63 @@
    SOFTWARE. *)
 
 type current_leader = {
-  current_leader_address: address
-; current_leader_amount: tez
+  current_leader_address: address;
+  current_leader_amount: tez;
+  start_time: timestamp
 }
 
 type storage = current_leader option
 
-let bid (storage: storage) (quantity: tez) (user_address: address) : storage =
-  if quantity <= 0tez then failwith "Amount cannot be null"
+let bid (storage: storage) (quantity: tez) (user_address: address) (time: timestamp) : storage =
+  if quantity = 0tez then failwith "Amount cannot be null"
   else match storage with
-  | None -> Some { current_leader_address = user_address; current_leader_amount = quantity }
-  | Some { current_leader_address; current_leader_amount } ->
+  | None ->
+    Some {
+      current_leader_address = user_address;
+      current_leader_amount = quantity;
+      start_time = time
+    }
+  | Some { current_leader_address; current_leader_amount; start_time } ->
     let () = if current_leader_address = user_address then failwith "Same leader" in
     let () = if current_leader_amount >= quantity then failwith "Amount should be greater" in
-    Some { current_leader_address = user_address; current_leader_amount = quantity }
+    Some {
+      current_leader_address = user_address;
+      current_leader_amount = quantity;
+      start_time = start_time
+    }
+
+let claim (storage: storage) (user_address: address) (time: timestamp) : operation * storage =
+  let one_day = 86_400 in
+  let current_leader = Option.unopt_with_error storage "No bid received" in
+  let () = if current_leader.start_time + one_day >= time then
+    failwith "Auction is not complete"
+  in
+  let () = if current_leader.current_leader_address <> user_address then
+    failwith "Not the leader"
+  in
+  (* We don't have any asset to send to the winning bidder, so we just emit an
+  event instead. *)
+  let op = Tezos.emit "%claim" user_address in
+  let new_storage = None in
+  (op, new_storage)
 
 [@entry]
 let bid (_, storage: unit * storage) : operation list * storage =
   let quantity = Tezos.get_amount () in
   let user_address = Tezos.get_sender () in
-  ([], bid storage quantity user_address)
+  let current_time = Tezos.get_now () in
+  ([], bid storage quantity user_address current_time)
 
+[@entry]
+let claim (_, storage: unit * storage) : operation list * storage =
+  let user_address = Tezos.get_sender () in
+  let current_time = Tezos.get_now () in
+  let operation, storage = claim storage user_address current_time in
+  ([operation], storage)
+
+[@view]
+let is_claimable (_, storage: unit * storage) : bool =
+  match storage with
+    | None -> false
+    | Some current_leader ->
+      current_leader.start_time + 86_400 < Tezos.get_now ()
