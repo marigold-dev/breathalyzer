@@ -27,14 +27,14 @@
 type originated = Breath.Contract.originated
 
 let originate (level: Breath.Logger.level) =
-  Breath.Contract.originate
+  Breath.Contract.originate_module
     level
     "auction_sc"
-    Auction.main
+    (contract_of Auction)
     (None: Auction.storage)
     (0tez)
 
-let bid (contract : (Auction.entrypoint, Auction.storage) originated) (qty: tez) () =
+let bid (contract : (Auction parameter_of, Auction.storage) originated) (qty: tez) () =
   Breath.Contract.transfer_to contract Bid qty
 
 let expect_storage

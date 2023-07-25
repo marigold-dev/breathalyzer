@@ -20,17 +20,12 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-type entrypoint =
-  | Bid
-
 type current_leader = {
   current_leader_address: address
 ; current_leader_amount: tez
 }
 
 type storage = current_leader option
-
-type applied = operation list * storage
 
 let bid (storage: storage) (quantity: tez) (user_address: address) : storage =
   if quantity <= 0tez then failwith "Amount cannot be null"
@@ -41,10 +36,9 @@ let bid (storage: storage) (quantity: tez) (user_address: address) : storage =
     let () = if current_leader_amount >= quantity then failwith "Amount should be greater" in
     Some { current_leader_address = user_address; current_leader_amount = quantity }
 
-let main (action: entrypoint) (storage: storage) : applied =
-  match action with
-  | Bid ->
-    let quantity = Tezos.get_amount () in
-    let user_address = Tezos.get_source () in
-    let new_storage = bid storage quantity user_address in
-    ([], new_storage)
+[@entry]
+let bid (_, storage: unit * storage) : operation list * storage =
+  let quantity = Tezos.get_amount () in
+  let user_address = Tezos.get_sender () in
+  ([], bid storage quantity user_address)
+
