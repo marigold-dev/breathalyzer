@@ -25,7 +25,7 @@
 #import "test_tezos.mligo" "Tezos_suite"
 
 let () =
-  Breath.Model.run_suites Trace [
+  Breath.Model.run_suites Void [
     Result_suite.suite
   ; Tezos_suite.suite
   ]

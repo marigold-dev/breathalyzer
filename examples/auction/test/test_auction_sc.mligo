@@ -105,7 +105,7 @@ let case_try_to_upgrade_with_a_null_amount =
       Breath.Result.reduce [
         Breath.Expect.fail_with_message "Amount cannot be null" alice_action
       ; Breath.Assert.is_equal "balance" balance 0tez
-      ; Breath.Assert.is_none "The storage should be filled" storage
+      ; Breath.Assert.is_none "The storage should be empty" storage
       ])
 
 
