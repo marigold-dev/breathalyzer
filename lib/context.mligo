@@ -24,6 +24,10 @@
 #import "contract.mligo" "Contract"
 #import "result.mligo" "Result"
 
+(* Defined in Tezos protocol with default parameters. *)
+let blocktime = 15n
+let blocks_per_cycle = 12n
+
 type actor = {
   name : string
 ; initial_amount: tez
@@ -84,3 +88,43 @@ let call_as
   (originated: (a, b) Contract.originated)
   (parameter: a) : Result.result =
   act_as actor (fun () -> Contract.call originated parameter)
+
+(** [wait_for_blocks n_blocks] bakes n blocks with a single transaction from
+    the current source to itself.
+    This function currently does not check if the current source has any tez.
+    For a large number of blocks, prefer the [wait_for] function. *)
+let rec wait_for_blocks (n_blocks: nat) : unit =
+  if n_blocks = 0n then ()
+  else
+    let source = Tezos.get_source () in
+    let dummy = Test.compile_value () in
+    (* We transfer a valid amount from the source to itself to bake a block
+    and change the time *)
+    let _ = Test.transfer source dummy 1mutez in
+    wait_for_blocks (abs (n_blocks - 1))
+
+(** [wait_for_with_blocks_per_cycle seconds blocks_per_cycle] bakes enough
+    blocks to wait for [seconds], using the parameter [blocks_per_cycle] to compute
+    the time it has to wait.
+    This function changes the current state of the interpreter. Due to the
+    number of blocks that it needs to bake, this function can slow down tests. *)
+let wait_for_with_blocks_per_cycle
+  (seconds: nat)
+  (blocks_per_cycle: nat) : Result.result =
+  let cycles_to_skip = seconds / (blocks_per_cycle * blocktime) in
+  let _ =
+    if cycles_to_skip > 0n then
+      (* Adding 1n here because of Tezos bake_until_n_cycle_end implementation. *)
+      Test.bake_until_n_cycle_end (cycles_to_skip + 1n)
+    else
+      let blocks_to_skip = seconds / blocktime in
+      wait_for_blocks blocks_to_skip
+  in
+  Result.succeed_with 0n
+
+(** [wait_for seconds blocks_per_cycle] bakes enough blocks to wait for
+    [seconds].
+    This function changes the current state of the interpreter. Due to the
+    number of blocks that it needs to bake, this function can slow down tests. *)
+let wait_for (seconds: nat) : Result.result =
+  wait_for_with_blocks_per_cycle seconds blocks_per_cycle

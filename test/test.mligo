@@ -23,9 +23,11 @@
 #import "../lib/lib.mligo" "Breath"
 #import "test_result.mligo" "Result_suite"
 #import "test_tezos.mligo" "Tezos_suite"
+#import "test_time.mligo" "Time_suite"
 
 let () =
   Breath.Model.run_suites Void [
     Result_suite.suite
   ; Tezos_suite.suite
+  ; Time_suite.suite
   ]
