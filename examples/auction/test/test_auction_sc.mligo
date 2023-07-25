@@ -25,7 +25,7 @@
 #import "../../../lib/lib.mligo" "Breath"
 #import "util.mligo" "Util"
 
-let case_happy_path =
+let bid_happy_path =
   Breath.Model.case
     "bid"
     "when everything is ok, it should upgrade the leader"
@@ -34,6 +34,7 @@ let case_happy_path =
       let contract = Util.originate level in
 
       let alice_action = Breath.Context.act_as alice (Util.bid contract 1tez) in
+      let start_time = Tezos.get_now () in
       let bob_action = Breath.Context.act_as bob (Util.bid contract 2tez) in
       let carol_action = Breath.Context.act_as carol (Util.bid contract 3tez) in
 
@@ -45,10 +46,10 @@ let case_happy_path =
       ; bob_action
       ; carol_action
       ; Breath.Assert.is_equal "balance" balance 6tez
-      ; Util.expect_storage storage carol 3tez
+      ; Util.expect_storage storage carol start_time 3tez
       ])
 
-let case_leader_try_to_be_upgraded_twice =
+let bid_leader_try_to_be_upgraded_twice =
   Breath.Model.case
     "bid"
     "when the leader try to reupgrade the storage it should raise an error"
@@ -57,6 +58,7 @@ let case_leader_try_to_be_upgraded_twice =
       let contract = Util.originate level in
 
       let alice_fst_action = Breath.Context.act_as alice (Util.bid contract 1tez) in
+      let start_time = Tezos.get_now () in
       let alice_snd_action = Breath.Context.act_as alice (Util.bid contract 2tez) in
 
       let storage = Breath.Contract.storage_of contract in
@@ -66,10 +68,10 @@ let case_leader_try_to_be_upgraded_twice =
         alice_fst_action
       ; Breath.Expect.fail_with_message "Same leader" alice_snd_action
       ; Breath.Assert.is_equal "balance" balance 1tez
-      ; Util.expect_storage storage alice 1tez
+      ; Util.expect_storage storage alice start_time 1tez
       ])
 
-let case_try_to_upgrade_with_a_lower_amount =
+let bid_try_to_upgrade_with_a_lower_amount =
   Breath.Model.case
     "bid"
     "when a challenger try to upgrade the storage with a lower amount it should raise an error"
@@ -78,6 +80,7 @@ let case_try_to_upgrade_with_a_lower_amount =
       let contract = Util.originate level in
 
       let alice_action = Breath.Context.act_as alice (Util.bid contract 2tez) in
+      let start_time = Tezos.get_now () in
       let bob_action = Breath.Context.act_as bob (Util.bid contract 1tez) in
 
       let storage = Breath.Contract.storage_of contract in
@@ -87,10 +90,10 @@ let case_try_to_upgrade_with_a_lower_amount =
         alice_action
       ; Breath.Expect.fail_with_message "Amount should be greater" bob_action
       ; Breath.Assert.is_equal "balance" balance 2tez
-      ; Util.expect_storage storage alice 2tez
+      ; Util.expect_storage storage alice start_time 2tez
       ])
 
-let case_try_to_upgrade_with_a_null_amount =
+let bid_try_to_upgrade_with_a_null_amount =
   Breath.Model.case
     "bid"
     "when a challenger try to upgrade the storage without tez, it should raise an error"
@@ -108,13 +111,57 @@ let case_try_to_upgrade_with_a_null_amount =
       ; Breath.Assert.is_none "The storage should be empty" storage
       ])
 
+let claim_leader_can_claim =
+  Breath.Model.case
+    "claim"
+    "the leader of the auction can call claim one day after the start"
+    (fun (level: Breath.Logger.level) ->
+      let (_, (alice, bob, _)) = Breath.Context.init_default () in
+      let contract = Util.originate level in
+
+      let alice_bid = Breath.Context.act_as alice (Util.bid contract 1tez) in
+      let bob_bid = Breath.Context.act_as bob (Util.bid contract 2tez) in
+
+      Breath.Result.reduce [
+        alice_bid
+      ; bob_bid
+      ; Breath.Assert.is_equal
+          "should not claimable before waiting"
+          (Tezos.call_view "is_claimable" () contract.originated_address)
+          (Some false)
+      ; Breath.Context.wait_for 86_400n
+      (* Notice how we have to call the contract after waiting, unlike
+       * what we did for the two calls to Bid. *)
+      ; Breath.Assert.is_equal
+          "should be claimable after waiting"
+          (Tezos.call_view "is_claimable" () contract.originated_address)
+          (Some true)
+      ; Breath.Context.call_as bob contract Claim
+    ])
+
+
+let claim_try_when_empty =
+  Breath.Model.case
+    "claim"
+    "when someone tries to claim an empty auction, it should fail"
+    (fun (level: Breath.Logger.level) ->
+      let (_, (alice, _, _)) = Breath.Context.init_default () in
+      let contract = Util.originate level in
+
+      let alice_action = Breath.Context.call_as alice contract Claim in
+
+      Breath.Result.reduce [
+        Breath.Expect.fail_with_message "No bid received" alice_action
+      ])
 
 let () =
   Breath.Model.run_suites Trace [
     Breath.Model.suite "Suite for [auction_sc]" [
-      case_happy_path
-    ; case_leader_try_to_be_upgraded_twice
-    ; case_try_to_upgrade_with_a_lower_amount
-    ; case_try_to_upgrade_with_a_null_amount
+      bid_happy_path
+    ; bid_leader_try_to_be_upgraded_twice
+    ; bid_try_to_upgrade_with_a_lower_amount
+    ; bid_try_to_upgrade_with_a_null_amount
+    ; claim_leader_can_claim
+    ; claim_try_when_empty
     ]
   ]

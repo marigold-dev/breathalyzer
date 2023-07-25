@@ -40,13 +40,17 @@ let bid (contract : (Auction parameter_of, Auction.storage) originated) (qty: te
 let expect_storage
     (storage : Auction.storage)
     (actor: Breath.Context.actor)
+    (time: timestamp)
     (expected_amount: tez) : Breath.Result.result =
   Breath.Assert.is_some_and
     "The storage should be filled"
-    (fun ({ current_leader_address; current_leader_amount} : Auction.current_leader) ->
+    (fun ({ current_leader_address; current_leader_amount; start_time } : Auction.current_leader) ->
         let expected_leader =
-           Breath.Assert.is_equal "leader" current_leader_address actor.address in
+          Breath.Assert.is_equal "leader" current_leader_address actor.address in
         let expected_amount =
-           Breath.Assert.is_equal "amount" current_leader_amount expected_amount in
-        Breath.Result.and_then expected_leader expected_amount)
+          Breath.Assert.is_equal "amount" current_leader_amount expected_amount in
+        let expected_start_time =
+          Breath.Assert.is_equal "start_time" start_time time in
+        Breath.Result.and_then expected_start_time
+          (Breath.Result.and_then expected_leader expected_amount))
     storage
