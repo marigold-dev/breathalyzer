@@ -24,6 +24,8 @@
 #import "contract.mligo" "Contract"
 #import "result.mligo" "Result"
 
+type originated = Contract.originated
+
 (* Defined in Tezos protocol with default parameters. *)
 let blocktime = 15n
 let blocks_per_cycle = 12n
@@ -85,7 +87,7 @@ let act_as (type a) (actor: actor) (handler : unit -> a) : a =
 let call_as
   (type a b)
   (actor: actor)
-  (originated: (a, b) Contract.originated)
+  (originated: (a, b) originated)
   (parameter: a) : Result.result =
   act_as actor (fun () -> Contract.call originated parameter)
 
