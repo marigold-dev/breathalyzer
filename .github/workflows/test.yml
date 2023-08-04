@@ -1,0 +1,26 @@
+name: Run Ligo Tests
+
+on:
+  workflow_dispatch: # adding the workflow_dispatch so it can be triggered manually
+  push:
+
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Ligo version
+        uses: marigold-dev/ligo-action@v1.0.0
+        with:
+          ligo_version: 0.70.1
+          command: version
+          working_directory: batcher
+      - name: Run test
+        uses: marigold-dev/ligo-action@v1.0.0
+        with:
+          ligo_version: 0.70.1
+          command: run test test.mligo
+          working_directory: test
+
