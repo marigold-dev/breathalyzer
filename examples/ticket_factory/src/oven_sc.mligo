@@ -20,24 +20,28 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-#import "common.mligo" "Common"
+#import "mint_sc.mligo" "Mint"
 
-type entrypoint = Common.oven_entrypoint
-type storage = Common.oven_storage
+type storage = {
+    stored_ticket : bytes ticket option
+  ; qty_ticket : nat
+  ; owner_address : address
+  ; mint_address : address
+}
 type applied = operation list * storage
 
 let request_mint (mint_address: address) (qty: tez) : operation =
   if qty <= 0tez then failwith "oven_sc: amount should not null"
   else
-    let callback : bytes ticket contract = Tezos.self "%oven_retreive_ticket" in
-    let mint_sc : Common.mint_entrypoint contract =
+    let callback : bytes ticket contract = Tezos.self "%oven_retrieve_ticket" in
+    let mint_sc : (Mint parameter_of) contract =
       Tezos.get_contract_with_error
         mint_address
         "oven_sc: unable to find mint contract"
     in
     Tezos.transaction (Mint_process_mint callback) qty mint_sc
 
-let retreive_ticket
+let retrieve_ticket
     (counter: nat)
     (stored_ticket : bytes ticket option)
     (minted_ticket: bytes ticket) : bytes ticket option * nat =
@@ -56,52 +60,66 @@ let request_redeem (mint_address: address) (stored_ticket : bytes ticket option)
     let (_, (_, qty)), ticket = Tezos.read_ticket ticket in
     if qty <= 0n then failwith "oven_sc: quantity is null"
     else
-      let callback : unit contract = Tezos.self "%oven_retreive_tez" in
-      let mint_sc : Common.mint_entrypoint contract =
+      let callback : unit contract = Tezos.self "%oven_retrieve_tez" in
+      let mint_sc : (Mint parameter_of) contract =
       Tezos.get_contract_with_error
         mint_address
         "oven_sc: unable to find mint contract"
       in
       Tezos.transaction (Mint_process_redeem (ticket, callback)) 0tez mint_sc
 
-let retreive_tez (owner_address : address) (retribution: tez) : operation =
+let retrieve_tez (owner_address : address) (retribution: tez) : operation =
   let beneficiary : unit contract =
      Tezos.get_contract_with_error owner_address "oven_sc: unable to find owner"
   in
   Tezos.transaction unit retribution beneficiary
 
+[@entry]
+let oven_request_mint
+  (_: unit)
+  ({owner_address; mint_address; stored_ticket; qty_ticket}: storage) : applied =
+  let _ = assert_with_error (Tezos.get_source () = owner_address) "oven_sc: not owner" in
+  let quantity = Tezos.get_amount () in
+  let operation = request_mint mint_address quantity in
+  ([operation], {
+      owner_address = owner_address
+    ; mint_address = mint_address
+    ; stored_ticket = stored_ticket
+    ; qty_ticket = qty_ticket} )
 
-let main (action, {owner_address; mint_address; stored_ticket; qty_ticket}: entrypoint * storage) : applied =
-  if Tezos.get_source () = owner_address then
-    let quantity = Tezos.get_amount () in
-    match action with
-    | Oven_request_mint ->
-      let operation = request_mint mint_address quantity in
-      ([operation], {
-         owner_address = owner_address
-       ; mint_address = mint_address
-       ; stored_ticket = stored_ticket
-       ; qty_ticket = qty_ticket} )
-    | Oven_retreive_ticket minted_ticket ->
-       let (new_ticket, counter) = retreive_ticket qty_ticket stored_ticket minted_ticket in
-       ([], {
-         owner_address = owner_address
-       ; mint_address = mint_address
-       ; stored_ticket = new_ticket
-       ; qty_ticket = counter} )
-    | Oven_request_redeem ->
-      let operation = request_redeem mint_address stored_ticket in
-      ([operation], {
-         owner_address = owner_address
-       ; mint_address = mint_address
-       ; stored_ticket = (None : bytes ticket option)
-       ; qty_ticket = 0n })
-    | Oven_retreive_tez ->
-      let operation = retreive_tez owner_address quantity in
-      ([operation], {
-         owner_address = owner_address
-       ; mint_address = mint_address
-       ; stored_ticket = (None : bytes ticket option)
-       ; qty_ticket = 0n} )
+[@entry]
+let oven_retrieve_ticket
+  (minted_ticket: bytes ticket)
+  ({owner_address; mint_address; stored_ticket; qty_ticket}: storage) : applied =
+  let _ = assert_with_error (Tezos.get_source () = owner_address) "oven_sc: not owner" in
+  let (new_ticket, counter) = retrieve_ticket qty_ticket stored_ticket minted_ticket in
+  ([], {
+    owner_address = owner_address
+  ; mint_address = mint_address
+  ; stored_ticket = new_ticket
+  ; qty_ticket = counter} )
 
-  else failwith "oven_sc: not owner"
+[@entry]
+let oven_request_redeem
+  (_: unit)
+  ({owner_address; mint_address; stored_ticket; qty_ticket = _}: storage) : applied =
+  let _ = assert_with_error (Tezos.get_source () = owner_address) "oven_sc: not owner" in
+  let operation = request_redeem mint_address stored_ticket in
+  ([operation], {
+    owner_address = owner_address
+  ; mint_address = mint_address
+  ; stored_ticket = (None : bytes ticket option)
+  ; qty_ticket = 0n })
+
+[@entry]
+let oven_retrieve_tez
+  (_: unit)
+  ({owner_address; mint_address; stored_ticket = _; qty_ticket = _}: storage) : applied =
+  let _ = assert_with_error (Tezos.get_source () = owner_address) "oven_sc: not owner" in
+  let quantity = Tezos.get_amount () in
+  let operation = retrieve_tez owner_address quantity in
+  ([operation], {
+    owner_address = owner_address
+  ; mint_address = mint_address
+  ; stored_ticket = (None : bytes ticket option)
+  ; qty_ticket = 0n} )
