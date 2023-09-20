@@ -27,10 +27,10 @@
 type originated = Breath.Contract.originated
 
 let originate_mint (level: Breath.Logger.level) (pl: bytes) (min_amount: tez) () =
-  Breath.Contract.originate_uncurried
+  Breath.Contract.originate_module
     level
     "mint_sc"
-    Mint.main
+    (contract_of Mint)
     { fixed_payload = pl; minimal_amount = min_amount }
     0tez
 
@@ -38,7 +38,7 @@ let originate_oven_with
     (level: Breath.Logger.level)
     (ticket: bytes ticket option)
     (actor: Breath.Context.actor)
-    (mint: (Mint.entrypoint, Mint.storage) originated)
+    (mint: (Mint parameter_of, Mint.storage) originated)
     () =
   let (fresh_ticket, counter) = match ticket with
     | None -> (None : bytes ticket option), 0n
@@ -46,10 +46,10 @@ let originate_oven_with
       let (_, (_, qty)), fresh = Tezos.read_ticket t in
       (Some fresh, qty)
   in
-  Breath.Contract.originate_uncurried
+  Breath.Contract.originate_module
     level
     ("oven_sc_" ^ actor.name)
-    Oven.main
+    (contract_of Oven)
     { stored_ticket = fresh_ticket
     ; owner_address = actor.address
     ; mint_address = mint.originated_address
@@ -60,25 +60,25 @@ let originate_oven_with_ticket
     (level: Breath.Logger.level)
     (ticket: bytes ticket)
     (actor: Breath.Context.actor)
-    (mint: (Mint.entrypoint, Mint.storage) originated)
+    (mint: (Mint parameter_of, Mint.storage) originated)
     () =
   originate_oven_with level (Some ticket) actor mint ()
 
 let originate_oven
     (level: Breath.Logger.level)
     (actor: Breath.Context.actor)
-    (mint: (Mint.entrypoint, Mint.storage) originated)
+    (mint: (Mint parameter_of, Mint.storage) originated)
     () =
   originate_oven_with level (None: bytes ticket option) actor mint ()
 
-let request_mint (contract: (Oven.entrypoint, Oven.storage) originated) (qty: tez) () =
+let request_mint (contract: (Oven parameter_of, Oven.storage) originated) (qty: tez) () =
   Breath.Contract.transfer_to contract Oven_request_mint qty
 
-let request_redeem (contract: (Oven.entrypoint, Oven.storage) originated) () =
+let request_redeem (contract: (Oven parameter_of, Oven.storage) originated) () =
   Breath.Contract.transfer_to contract Oven_request_redeem 0tez
 
 let expected_mint_state
-    (contract: (Mint.entrypoint, Mint.storage) originated)
+    (contract: (Mint parameter_of, Mint.storage) originated)
     (pl: bytes)
     (ma: tez)
     (current_balance: tez) : Breath.Result.result =
@@ -90,9 +90,9 @@ let expected_mint_state
   Breath.Result.reduce [pl_expectation; ma_expectation; ba_expectation]
 
 let expected_oven_state
-    (contract : (Oven.entrypoint, Oven.storage) originated)
+    (contract : (Oven parameter_of, Oven.storage) originated)
     (actor : Breath.Context.actor)
-    (mint : (Mint.entrypoint, Mint.storage) originated)
+    (mint : (Mint parameter_of, Mint.storage) originated)
     (qty : nat) : Breath.Result.result =
   let { stored_ticket = _; owner_address; mint_address; qty_ticket} =
     Breath.Contract.storage_of contract

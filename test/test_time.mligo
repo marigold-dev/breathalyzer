@@ -35,20 +35,35 @@ module Ping = struct
       failwith "come back later"
 end
 
+module Exact = struct
+  type storage = timestamp
+
+  [@entry]
+  let exact (_, last: unit * storage) : operation list * storage =
+    let now = Tezos.get_now () in
+    if last > (0: timestamp) && now <> last + 30 then
+      failwith "wrong time"
+    else
+      [], now
+end
+
 let (_, (alice, _, _)) = B.Context.init_default ()
 
-let originated level initial_time =
+let ping_contract level initial_time =
   B.Contract.originate_module level "ping" (contract_of Ping) initial_time 0tez
+
+let exact_contract level initial_time =
+  B.Contract.originate_module level "exact" (contract_of Exact) initial_time 0tez
 
 let suite =
   B.Model.suite
     "Test suite for time-related operations"
     [
       B.Model.case
-        "ping"
-        "succeeds when you call it after waiting for more than one minute"
+        "wait_for"
+        "waits for at least the expected time"
         (fun (level: B.Logger.level) ->
-          let contract = originated level (0: timestamp) in
+          let contract = ping_contract level (0: timestamp) in
 
           B.Result.reduce [
             B.Context.call_as alice contract Ping;
@@ -60,9 +75,9 @@ let suite =
 
       B.Model.case
         "ping"
-        "fails when you call it before waiting"
+        "does not wait for an arbitrary long time"
         (fun (level: B.Logger.level) ->
-          let contract = originated level (0: timestamp) in
+          let contract = ping_contract level (0: timestamp) in
 
           B.Result.reduce [
             B.Context.call_as alice contract Ping;
@@ -70,6 +85,46 @@ let suite =
             B.Expect.fail_with_message
               "come back later"
               (B.Context.call_as alice contract Ping);
-          ])
+          ]);
+
+      B.Model.case
+        "wait_for"
+        "waiting for the block time makes you miss 1 block, not more"
+        (fun (level: B.Logger.level) ->
+          let exact_contract = exact_contract level (0: timestamp) in
+
+          (* We cannot just repeat the list [call_as; wait_for] because these
+           functions are impure *)
+          B.Result.reduce [
+            B.Context.call_as alice exact_contract Exact;
+            B.Context.wait_for 15n;
+            B.Context.call_as alice exact_contract Exact;
+            B.Context.wait_for 15n;
+            B.Context.call_as alice exact_contract Exact;
+            B.Context.wait_for 15n;
+            B.Context.call_as alice exact_contract Exact;
+            B.Context.wait_for 15n;
+            B.Context.call_as alice exact_contract Exact;
+            B.Context.wait_for 15n;
+            B.Context.call_as alice exact_contract Exact;
+            B.Context.wait_for 15n;
+            B.Context.call_as alice exact_contract Exact;
+          ]);
+
+      B.Model.case
+        "wait_for"
+        "waiting for less than one block time does not make you miss one block"
+        (fun (level: B.Logger.level) ->
+          let exact_contract = exact_contract level (0: timestamp) in
+
+          (* We cannot just repeat the list [call_as; wait_for] because these
+           functions are impure *)
+          B.Result.reduce [
+            B.Context.call_as alice exact_contract Exact;
+            B.Context.wait_for 1n;
+            B.Expect.fail_with_message
+              "wrong time"
+              (B.Context.call_as alice exact_contract Exact);
+          ]);
 
     ]

@@ -20,10 +20,10 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
-#import "common.mligo" "Common"
-
-type entrypoint = Common.mint_entrypoint
-type storage = Common.mint_storage
+type storage = {
+    fixed_payload : bytes
+  ; minimal_amount : tez
+}
 type applied = operation list * storage
 
 let tez_to_nat (xtz: tez) : nat = xtz / 1mutez
@@ -56,13 +56,16 @@ let process_redeem
   let retribution = nat_to_tez qty in
   Tezos.transaction unit retribution callback
 
-let main (action, storage: entrypoint * storage) : applied =
-  match action with
-  | Mint_process_mint callback ->
-    let quantity = Tezos.get_amount () in
-    let operation = process_mint storage callback quantity in
-    ([operation], storage)
-  | Mint_process_redeem (ticket, callback) ->
-    let self_address = Tezos.get_self_address () in
-    let operation = process_redeem storage self_address ticket callback in
-    ([operation], storage)
+[@entry]
+let mint_process_mint (callback: bytes ticket contract) (storage: storage): applied =
+  let quantity = Tezos.get_amount () in
+  let operation = process_mint storage callback quantity in
+  ([operation], storage)
+
+[@entry]
+let mint_process_redeem
+  (ticket, callback: bytes ticket * unit contract)
+  (storage: storage): applied =
+  let self_address = Tezos.get_self_address () in
+  let operation = process_redeem storage self_address ticket callback in
+  ([operation], storage)
