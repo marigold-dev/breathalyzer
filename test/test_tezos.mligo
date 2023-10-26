@@ -30,20 +30,20 @@ module Other = struct
   }
 
   [@entry]
-  let default (_, storage: unit * storage): operation list * storage =
+  let default () (storage: storage): operation list * storage =
     match (Tezos.call_view "get_value" () storage.simple: int option) with
       | None -> failwith "Should not happen"
       | Some x -> [], { storage with x = x }
 
   [@view]
-  let view (_, storage: unit * storage): int =
+  let view () (storage: storage): int =
     storage.x
 end
 
 let (_, (alice, _, _)) = B.Context.init_default ()
 
 let originated level =
-  B.Contract.originate_module level "Simple" (contract_of Simple) 0 0tez
+  B.Contract.originate level "Simple" (contract_of Simple) 0 0tez
 
 let case_views_1 =
   B.Model.case
@@ -70,7 +70,7 @@ let case_views_2 =
       let contract = originated level in
       let initial_storage = { simple = contract.originated_address; x = 0 } in
       let other =
-        B.Contract.originate_module level "Other" (contract_of Other) initial_storage 0tez
+        B.Contract.originate level "Other" (contract_of Other) initial_storage 0tez
       in
       B.Result.reduce [
         B.Context.call_as alice

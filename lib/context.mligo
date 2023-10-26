@@ -97,10 +97,10 @@ let rec wait_for_blocks (n_blocks: nat) : unit =
   if n_blocks = 0n then ()
   else
     let source = Tezos.get_source () in
-    let dummy = Test.compile_value () in
+    let source : (unit, unit) typed_address = Test.cast_address source in
     (* We transfer a valid amount from the source to itself to bake a block
     and change the time *)
-    let _ = Test.transfer source dummy 1mutez in
+    let _ = Test.transfer source () 1mutez in
     wait_for_blocks (abs (n_blocks - 1))
 
 (** [wait_for_with_blocks_per_cycle seconds blocks_per_cycle] bakes enough

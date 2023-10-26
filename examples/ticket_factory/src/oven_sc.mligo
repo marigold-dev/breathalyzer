@@ -39,7 +39,7 @@ let request_mint (mint_address: address) (qty: tez) : operation =
         mint_address
         "oven_sc: unable to find mint contract"
     in
-    Tezos.transaction (Mint_process_mint callback) qty mint_sc
+    Tezos.transaction (Mint_process_mint callback: Mint parameter_of) qty mint_sc
 
 let retrieve_ticket
     (counter: nat)
@@ -66,7 +66,7 @@ let request_redeem (mint_address: address) (stored_ticket : bytes ticket option)
         mint_address
         "oven_sc: unable to find mint contract"
       in
-      Tezos.transaction (Mint_process_redeem (ticket, callback)) 0tez mint_sc
+      Tezos.transaction ((Mint_process_redeem (ticket, callback)): Mint parameter_of) 0tez mint_sc
 
 let retrieve_tez (owner_address : address) (retribution: tez) : operation =
   let beneficiary : unit contract =

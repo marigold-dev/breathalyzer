@@ -62,21 +62,21 @@ let claim (storage: storage) (user_address: address) (time: timestamp) : operati
   (op, new_storage)
 
 [@entry]
-let bid (_, storage: unit * storage) : operation list * storage =
+let bid () (storage: storage) : operation list * storage =
   let quantity = Tezos.get_amount () in
   let user_address = Tezos.get_sender () in
   let current_time = Tezos.get_now () in
   ([], bid storage quantity user_address current_time)
 
 [@entry]
-let claim (_, storage: unit * storage) : operation list * storage =
+let claim () (storage: storage) : operation list * storage =
   let user_address = Tezos.get_sender () in
   let current_time = Tezos.get_now () in
   let operation, storage = claim storage user_address current_time in
   ([operation], storage)
 
 [@view]
-let is_claimable (_, storage: unit * storage) : bool =
+let is_claimable () (storage: storage) : bool =
   match storage with
     | None -> false
     | Some current_leader ->
