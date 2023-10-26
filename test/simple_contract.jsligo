@@ -10,9 +10,9 @@ const decrement = (delta : int, store : s) : ret =>
   [list([]), store - delta];
 
 @entry
-const reset = (_ : unit, _ : s) : ret =>
+const reset = (_unit : unit, _storage : s) : ret =>
   [list([]), 0];
 
 @view
-const get_value = (_ : unit, s : s) : s =>
+const get_value = (_unit : unit, s : s) : s =>
   s

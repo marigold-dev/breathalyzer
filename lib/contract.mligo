@@ -29,61 +29,19 @@ type ('a, 'b) originated = {
 ; originated_address : address
 }
 
-(** [originate level name f storage quantity] originates the smart-contract [f]
-    (which is a main entry point) and provisions it using [quantity] and with
-    [storage] as a default storage value. *)
-let originate
-    (type a b)
-    (level: Logger.level)
-    (name: string)
-    (main: (a -> b -> (operation list * b)))
-    (storage: b)
-    (quantity: tez) : (a, b) originated =
-  let typed_address, _, _ = Test.originate main storage quantity in
-  let contract = Test.to_contract typed_address in
-  let address = Tezos.address contract in
-
-  let () =
-    Logger.log level ("originated smart contract", name, address, storage, quantity)
-  in
-  { originated_typed_address = typed_address
-  ; originated_contract = contract
-  ; originated_address = address }
-
-(** [originate_uncurried level name f storage quantity] originates the
-    smart-contract [f] (which is a main entry point) and provisions it using
-    [quantity] and with [storage] as a default storage value. *)
-let originate_uncurried
-    (type a b)
-    (level: Logger.level)
-    (name: string)
-    (main: (a * b -> (operation list * b)))
-    (storage: b)
-    (quantity: tez) : (a, b) originated =
-  let typed_address, _, _ = Test.originate_uncurried main storage quantity in
-  let contract = Test.to_contract typed_address in
-  let address = Tezos.address contract in
-
-  let () =
-    Logger.log level ("originated smart contract", name, address, storage, quantity)
-  in
-  { originated_typed_address = typed_address
-  ; originated_contract = contract
-  ; originated_address = address }
-
 (** [originate_module level name module storage quantity] originates the
     smart-contract from the module [module] and provisions it using [quantity]
     and with [storage] as a default storage value. Use the [contract_of] keyword
     to get a module_contract out of a module. Use this function to originate a
     contract with views. *)
-let originate_module
+let originate
   (type a b)
   (level: Logger.level)
   (name: string)
   (contract: (a, b) module_contract)
   (storage: b)
   (quantity: tez) : (a, b) originated =
-  let typed_address, _, _ = Test.originate_module contract storage quantity in
+  let {addr=typed_address; code=_; size=_} = Test.originate contract storage quantity in
   let contract = Test.to_contract typed_address in
   let address = Tezos.address contract in
 
@@ -138,5 +96,5 @@ let storage_of
 let balance_of
     (type a b)
     (originated: (a, b) originated) : tez =
-  let addr = originated.originated_address in
+  let addr = originated.originated_typed_address in
   Test.get_balance addr

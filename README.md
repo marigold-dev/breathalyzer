@@ -1,7 +1,7 @@
-# breathalyzer
+# Breathalyzer test framework
 
-A simple test framework for Ligo Lang, the name `breathalyzer` is a wink to
-[Alcotest](https://github.com/mirage/alcotest), a powerful test framework for
+A simple test framework for the Ligo language. The name `Breathalyzer` is a wink
+to [Alcotest](https://github.com/mirage/alcotest), a powerful test framework for
 the OCaml language.
 
 The best way to understand the design and use of **Breathalyzer** is to consult

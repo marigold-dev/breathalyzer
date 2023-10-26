@@ -27,7 +27,7 @@
 type originated = Breath.Contract.originated
 
 let originate (level: Breath.Logger.level) =
-  Breath.Contract.originate_module
+  Breath.Contract.originate
     level
     "auction_sc"
     (contract_of Auction)

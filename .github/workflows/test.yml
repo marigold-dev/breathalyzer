@@ -14,13 +14,13 @@ jobs:
       - name: Ligo version
         uses: marigold-dev/ligo-action@v1.0.0
         with:
-          ligo_version: 0.70.1
+          ligo_version: 1.0.0
           command: version
           working_directory: batcher
       - name: Run test
         uses: marigold-dev/ligo-action@v1.0.0
         with:
-          ligo_version: 0.70.1
+          ligo_version: 1.0.0
           command: run test test.mligo
           working_directory: test
 
