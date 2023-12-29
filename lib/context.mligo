@@ -32,6 +32,8 @@ type actor = {
   name : string
 ; initial_amount: tez
 ; address: address
+; key: key
+; secret: string
 }
 
 (** [init actors] initializes bootstrap accounts. *)
@@ -43,11 +45,13 @@ let init_with (actors: (string * tez) list) : actor list =
   let () = Test.reset_state number_of_accounts default_amounts in
   let (_counter, actors) =
     List.fold_left (fun ((i, actors), (name, value) : (nat * actor list) * (string * tez)) ->
-      let address = Test.nth_bootstrap_account (int i) in
+      let (address, key, secret) = Test.get_bootstrap_account i in
       let actor = {
         name = name
       ; initial_amount = value
       ; address = address
+      ; key = key
+      ; secret = secret
       }
       in
       (i + 1n, actor :: actors)
