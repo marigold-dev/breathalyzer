@@ -23,7 +23,7 @@
 #import "../lib/lib.mligo" "B"
 #import "./simple_contract.jsligo" "Simple"
 
-module Other = struct
+module Views = struct
   type storage = {
     simple: address;
     x: int
@@ -40,7 +40,7 @@ module Other = struct
     storage.x
 end
 
-let (_, (alice, _, _)) = B.Context.init_default ()
+let (_, (alice, bob, _)) = B.Context.init_default ()
 
 let originated level =
   B.Contract.originate level "Simple" (contract_of Simple) 0 0tez
@@ -48,7 +48,7 @@ let originated level =
 let case_views_1 =
   B.Model.case
     "call_view"
-    "succeeds on a contract originated with originate_module"
+    "succeeds on an originated contract"
     (fun (level: B.Logger.level) ->
       let contract = originated level in
       B.Result.reduce [
@@ -65,27 +65,72 @@ let case_views_1 =
 let case_views_2 =
   B.Model.case
     "call_view"
-    "succeeds when a contract uses it on another contract, both originated with originate_module"
+    "succeeds when a contract uses it on another contract"
     (fun (level: B.Logger.level) ->
       let contract = originated level in
       let initial_storage = { simple = contract.originated_address; x = 0 } in
-      let other =
-        B.Contract.originate level "Other" (contract_of Other) initial_storage 0tez
+      let view_contract =
+        B.Contract.originate level "Views" (contract_of Views) initial_storage 0tez
       in
       B.Result.reduce [
         B.Context.call_as alice
           contract (Increment 10);
         B.Context.call_as alice
-          other (Default ());
+          view_contract (Default ());
         B.Assert.is_equal
           "should be 10"
-          (Tezos.call_view "view" () other.originated_address)
+          (Tezos.call_view "view" () view_contract.originated_address)
           (Some 10)
       ])
 
-let suite =
+(* Simple signatures check to ensure Breathalyzer generates and stores the
+correct public and private keys *)
+
+module Signatures = struct
+  type storage = unit
+
+  [@entry]
+  let default (key, signature: key * signature) (_: storage): operation list * storage =
+    if Crypto.check key signature 0x1234 then
+      ([], ())
+    else
+      failwith "Invalid signature"
+end
+
+let key_1 =
+  B.Model.case
+    "signature"
+    "can be checked for the right key"
+    (fun (level: B.Logger.level) ->
+      let contract = B.Contract.originate level "Signatures" (contract_of Signatures) () 0tez in
+      let sign = Test.sign alice.secret 0x1234 in
+      B.Result.reduce [
+        B.Context.call_as alice
+          contract (Default (alice.key, sign))
+      ])
+
+let key_2 =
+  B.Model.case
+    "signature"
+    "cannot be checked for the wrong key"
+    (fun (level: B.Logger.level) ->
+      let contract = B.Contract.originate level "Signatures" (contract_of Signatures) () 0tez in
+      let sign = Test.sign alice.secret 0x1234 in
+      B.Result.reduce [
+        B.Expect.fail_with_message "Invalid signature"
+          (B.Context.call_as alice
+           contract (Default (bob.key, sign)))
+      ])
+
+let keys_suite =
   B.Model.suite
-    "Test suite for Tezos operations"
+    "Test suite for keys and signatures"
+    [ key_1
+    ; key_2 ]
+
+let views_suite =
+  B.Model.suite
+    "Test suite for Tezos views"
     [ case_views_1
     ; case_views_2
     ]
