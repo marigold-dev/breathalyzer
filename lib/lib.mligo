@@ -23,16 +23,23 @@
 (** The entrypoint of the test framework library. *)
 
 (** Re-export the [Logger module]. *)
+[@public]
 #import "logger.mligo" "Logger"
 
+[@public]
 #import "result.mligo" "Result"
 
+[@public]
 #import "model.mligo" "Model"
 
+[@public]
 #import "assert.mligo" "Assert"
 
+[@public]
 #import "expect.mligo" "Expect"
 
+[@public]
 #import "context.mligo" "Context"
 
+[@public] 
 #import "contract.mligo" "Contract"
