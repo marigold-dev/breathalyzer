@@ -7,7 +7,7 @@
         "type": "git",
         "url": "git+https://github.com/marigold-dev/breathalyzer.git"
     },
-    "version": "1.6.0",
+    "version": "1.7.0",
     "main": "./lib/lib.mligo",
     "author": "Marigold <contact@marigold.dev>",
     "license": "MIT",
